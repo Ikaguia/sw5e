@@ -197,6 +197,8 @@ export default class Item5e extends Item {
             this.data.type !== "consumable" || ["rod", "trinket", "wand"].includes(this.data.data.consumableType);
         if (requireEquipped && this.data.data.equipped === false) return true;
 
+        if (this.data.type === "modification" && (this.data.data.modifying === null || this.data.data.modifying.disabled)) return true;
+
         return this.data.data.attunement === CONFIG.SW5E.attunementTypes.REQUIRED;
     }
 
@@ -208,7 +210,6 @@ export default class Item5e extends Item {
      * Augment the basic Item data model with additional dynamic data.
      */
     prepareDerivedData() {
-        console.debug('prepareDerivedData', this.name);
         super.prepareDerivedData();
 
         // Get the Item's data
@@ -355,7 +356,6 @@ export default class Item5e extends Item {
      * Apply modifications.
      */
     applyModifications() {
-        console.debug('applyModifications', this.name);
         this.overrides = {};
 
         // Get the Item's data
@@ -380,7 +380,6 @@ export default class Item5e extends Item {
             else itemMods.type = 'vibroweapon';
         }
         else itemMods.type = null;
-        console.debug('itemMods.type', item.type, itemData.armor?.type ?? itemData.weaponType, itemMods.type);
 
         if (game.settings.get("sw5e", "disableItemMods") || foundry.utils.isObjectEmpty(changes)) return;
 
@@ -1894,9 +1893,9 @@ export default class Item5e extends Item {
         delete changes['_id'];
 
         // If a temporary modification item changes it's data, update the data in the modified item
-        if (this.type === "modification" && this.actor && this.data.data?.modified) {
+        if (this.type === "modification" && this.actor && this.data.data?.modifying?.id) {
             const modType = this.data.data?.modificationType === "augment" ? "augment" : "mod";
-            this.actor.items.get(this.data.data.modified)?.updModification(this.id, null, this.data.toObject());
+            this.actor.items.get(this.data.data.modifying.id)?.updModification(this.id, null, this.data.toObject());
         }
 
         // The below options are only needed for character classes
@@ -1933,7 +1932,7 @@ export default class Item5e extends Item {
         // Remove modification data from modified item
         if (this.type === "modification") {
             const modType = this.data.data?.modificationType === "augment" ? "augment" : "mod";
-            this.actor?.items?.get(this.data.data?.modified)?.delModification(this.id, null, false);
+            this.actor?.items?.get(this.data.data?.modifying?.id)?.delModification(this.id, null, false);
         }
         // Delete any temporary modification items on the parent actor created by this item
         else {
@@ -1953,9 +1952,11 @@ export default class Item5e extends Item {
      */
     _onCreateUnownedModification(data) {
         const updates = {};
-        if (foundry.utils.getProperty(data, "data.modified") !== null) {
-            updates["data.modified"] = null; // Unowned modifications are not modifying any item
-        }
+
+        // Unowned modifications are not modifying any item
+        if (foundry.utils.getProperty(data, "data.modifying.id") !== null) updates["data.modifying.id"] = null;
+        if (foundry.utils.getProperty(data, "data.modifying.disabled") !== false) updates["data.modifying.disabled"] = false;
+
         return updates;
     }
 
@@ -2076,7 +2077,6 @@ export default class Item5e extends Item {
      * Handle the weapon reload logic.
      */
     reloadWeapon() {
-        console.debug('reloading');
         if (this.type !== "weapon") return;
 
         const wpnData = this.data.data;
@@ -2209,8 +2209,6 @@ export default class Item5e extends Item {
             }));
         }
 
-        console.debug('item', item.name, itemMods);
-        console.debug('mod', mod.name, modData);
         if (!(itemMods.type in CONFIG.SW5E.modificationTypes)) return ui.notifications.warn(game.i18n.format("SW5E.ErrorModUnrecognizedType", {
             name: item.name,
             type: itemMods.type,
@@ -2240,12 +2238,11 @@ export default class Item5e extends Item {
 
         const data = mod.toObject();
         delete data._id;
-        data.data.modified = item.id;
+        data.data.modifying.id = item.id;
         const obj = { data: data, name: mod.name, type: modType };
 
         if (this.actor) {
             const items = await Item5e.createDocuments([data], {parent: this.actor});
-            console.debug(items);
             if (items?.length) obj.id = items[0].id;
         }
 
@@ -2267,6 +2264,7 @@ export default class Item5e extends Item {
             if (data === null) return;
 
             if (index === null) index = mods.findIndex(m => m.id === id);
+            if (index === -1) return;
             mods[index].data = data;
             mods[index].name = data.name;
             await this.update({[`data.modify.items`]: mods});
@@ -2281,13 +2279,15 @@ export default class Item5e extends Item {
         const mods = this.data?.data?.modify?.items;
         if (mods) {
             if (index === null) index = mods.findIndex(m => m.id === id);
+            if (index === -1) return;
             mods.splice(index, 1);
             await this.update({[`data.modify.items`]: mods});
         }
 
         if (deleteTempItem) {
             if (id === null) id = mods[index].id;
-            await this.actor?.items?.get(id)?.delete();
+            const item = await this.actor?.items?.get(id);
+            await item.delete();
         }
 
         await this.updModificationChanges();
@@ -2299,12 +2299,12 @@ export default class Item5e extends Item {
         const mods = this.data?.data?.modify?.items;
         if (mods) {
             if (index === null) index = mods.findIndex(m => m.id === id);
+            if (index === -1) return;
             mods[index].disabled = !mods[index].disabled;
             await this.update({[`data.modify.items`]: mods});
 
-            // TODO: Mark the fake item as disabled to disable active effects
-            // if (id === null) id = mods[index].id;
-            // await this.actor?.items?.get(id)?.update({"data.disabled": mods[index].disabled});
+            if (id === null) id = mods[index].id;
+            await this.actor?.items?.get(id)?.update({"data.modifying.disabled": mods[index].disabled});
         }
 
         await this.updModificationChanges();

@@ -577,16 +577,12 @@ export default class ItemSheet5e extends ItemSheet {
         const item = this.item;
         const actor = item.actor;
 
-        console.debug('_onOpenItemModification', id, index, actor?.name);
-
         if (actor && id) {
-            console.debug('get actor item');
             const item = actor.items.get(id)
             return item?.sheet?.render(true);
         }
 
         if (item && index !== null) {
-            console.debug('create temp item');
             const data = foundry.utils.duplicate(item.data.data.modify.items[Number(index)].data);
             data.data.fakeItem = this.item.uuid;
             const mod = new Item5e(data);
@@ -610,8 +606,6 @@ export default class ItemSheet5e extends ItemSheet {
         const index = li.dataset.index;
         const item = this.item;
         const actor = item.actor;
-
-        console.debug('_onManageItemModification', id, index, actor?.name);
 
         switch (action) {
             case "delete":

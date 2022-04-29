@@ -1250,7 +1250,10 @@
             "templates": ["itemDescription", "physicalItem", "activatedEffect", "action"],
             "modificationType": "vibroweapon",
             "modificationSlot": "slot1",
-            "modified": null
+            "modifying": {
+                "id": null,
+                "disabled": false
+            }
         },
         "power": {
             "templates": ["itemDescription", "activatedEffect", "action"],
