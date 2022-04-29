@@ -293,7 +293,7 @@ export default class Item5e extends Item {
 
         // Starship Modification Items
         else if (itemData.type === "starshipmod") {
-            data.baseCost.value = data.baseCost.value || SW5E.ssModSystemsBaseCost[data.system.value];
+            foundry.utils.setProperty(data, "baseCost.value", data?.baseCost?.value || CONFIG.SW5E.ssModSystemsBaseCost[data.system.value]);
         }
 
         // Activated Items
