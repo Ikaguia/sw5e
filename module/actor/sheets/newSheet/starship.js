@@ -123,7 +123,7 @@ export default class ActorSheet5eStarship extends ActorSheet5e {
                 if ("starshipaction" === item.type) arr[0].push(item);
                 else if (["feat", "starship", "starshipfeature"].includes(item.type)) arr[1].push(item);
                 else if (item.data.equipped) arr[2].push(item);
-                else if (Object.keys(ssCargo).includes(item.type))arr[3].push(item);
+                else if (Object.keys(ssCargo).includes(item.type)) arr[3].push(item);
 
                 return arr;
             },
