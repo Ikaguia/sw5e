@@ -910,7 +910,7 @@ export default class Actor5e extends Actor {
       if (flags.diamondSoul) abl.proficient = 1; // Diamond Soul is proficient in all saves
       abl.mod = Math.floor((abl.value - 10) / 2);
 
-      const isRA = this._isRemarkableAthlete(id);
+      const isRA = this._hasCharacterFlag("remarkableAthlete", id);
       abl.checkProf = new Proficiency(this.system.attributes.prof, isRA || flags.jackOfAllTrades ? 0.5 : 0);
       const saveBonusAbl = simplifyBonus(abl.bonuses?.save, rollData);
       abl.saveBonus = saveBonusAbl + saveBonus;
@@ -952,7 +952,7 @@ export default class Actor5e extends Actor {
       const baseBonus = simplifyBonus(skl.bonuses?.check, rollData);
 
       // Remarkable Athlete
-      if (this._isRemarkableAthlete(skl.ability) && skl.value < 0.5) {
+      if (this._hasCharacterFlag("remarkableAthlete", skl.ability) && skl.value < 0.5) {
         skl.value = 0.5;
       }
 
@@ -976,7 +976,7 @@ export default class Actor5e extends Actor {
       if (Number.isNumeric(skl.prof.term)) skl.total += skl.prof.flat;
 
       // Compute passive bonus
-      const passive = flags.observantFeat && feats.observantFeat.skills.includes(id) ? 5 : 0;
+      const passive = this._hasCharacterFlag("observantFeat", null, id) ? 5 : 0;
       const passiveBonus = simplifyBonus(skl.bonuses?.passive, rollData);
       skl.passive = 10 + skl.mod + skl.bonus + skl.prof.flat + passive + passiveBonus;
     }
@@ -1000,7 +1000,7 @@ export default class Actor5e extends Actor {
       let roundDown = true;
 
       // Remarkable Athlete.
-      if (this._isRemarkableAthlete(tool.ability) && tool.value < 0.5) {
+      if (this._hasCharacterFlag("remarkableAthlete", tool.ability) && tool.value < 0.5) {
         tool.value = 0.5;
         roundDown = false;
       }
@@ -1237,7 +1237,7 @@ export default class Actor5e extends Actor {
 
     // Initiative proficiency
     const prof = this.system.attributes.prof ?? 0;
-    const ra = flags.remarkableAthlete && ["str", "dex", "con"].includes(abilityId);
+    const ra = this._hasCharacterFlag("remarkableAthlete", abilityId);
     init.prof = new Proficiency(prof, flags.jackOfAllTrades || ra ? 0.5 : 0);
 
     // Total initiative includes all numeric terms
@@ -1702,15 +1702,24 @@ export default class Actor5e extends Actor {
   /* -------------------------------------------- */
 
   /**
-   * Determine whether the provided ability is usable for remarkable athlete.
-   * @param {string} ability  Ability type to check.
-   * @returns {boolean}       Whether the actor has the remarkable athlete flag and the ability is physical.
+   * Determine whether the character has at least one of the provided flags that wrorks with the provided ability or skill.
+   * @param {string|string[]} flags   Flags to check
+   * @param {string} [ability]        Ability to check.
+   * @param {string} [skill]          Skill to check.
+   * @returns {boolean}               Whether the actor one of the flags for which the ability or skill fits.
    * @private
    */
-  _isRemarkableAthlete(ability) {
-    return (
-      this.getFlag("sw5e", "remarkableAthlete")
-      && CONFIG.SW5E.characterFlags.remarkableAthlete.abilities.includes(ability)
+  _hasCharacterFlag(flags, ability, skill) {
+    const flagsChar = this.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
+    if (typeof flags === "string") flags = [flags];
+    return flags.reduce(
+      ((acc, flag) => (
+        flagsChar[flag] &&
+        (!ability || (flagsCfg[flag].abilities?.includes(ability) ?? true)) &&
+        (!skill || (flagsCfg[flag].skills?.includes(skill) ?? true))
+      ) ? flag : acc),
+      false
     );
   }
 
@@ -1743,6 +1752,7 @@ export default class Actor5e extends Actor {
    */
   async rollSkill(skillId, options = {}) {
     const flags = this.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
     const skl = this.system.skills[skillId];
     const abl = this.system.abilities[skl.ability];
     const globalBonuses = this.system.bonuses?.abilities ?? {};
@@ -1762,7 +1772,7 @@ export default class Actor5e extends Actor {
     // Mastery proficiency
     if (skl.proficient >= 3 && !options.disadvantage) {
       options.advantage = true;
-      options.advantageHint = CONFIG.SW5E.proficiencyLevels[abl.proficient].label;
+      options.advantageHint = CONFIG.SW5E.proficiencyLevels[skl.proficient].label;
     }
 
     // High/Grand Mastery proficiency
@@ -1792,11 +1802,13 @@ export default class Actor5e extends Actor {
     }
 
     // Flags
-    const supremeAptitude =
-      (flags.supremeAptitude && CONFIG.SW5E.characterFlags.supremeAptitude.abilities.includes(this.abilityMod))
-      || undefined;
+    const supremeAptitude = this._hasCharacterFlag("supremeAptitude", skl.ability, skillId);
     // Reliable Talent applies to any skill check we have full or better proficiency in
     const reliableTalent = skl.value >= 1 && flags.reliableTalent;
+
+    const advantageFlag = this._hasCharacterFlag(["pathfinder", "keenSenses", "treeClimber"], skl.ability, skillId);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
 
     // Roll and return
     const flavor = game.i18n.format("SW5E.SkillPromptTitle", { skill: CONFIG.SW5E.skills[skillId]?.label ?? "" });
@@ -1809,6 +1821,8 @@ export default class Actor5e extends Actor {
         elvenAccuracy: supremeAptitude,
         halflingLucky: flags.halflingLucky,
         reliableTalent,
+        advantage: advantageFlag,
+        advantageHint,
         messageData: {
           speaker: options.speaker || ChatMessage.getSpeaker({ actor: this }),
           "flags.sw5e.roll": { type: "skill", skillId }
@@ -2010,8 +2024,7 @@ export default class Actor5e extends Actor {
     }
 
     // Flags
-    const supremeAptitude =
-      (flags.supremeAptitude && CONFIG.SW5E.characterFlags.supremeAptitude.abilities.includes(abilityId)) || undefined;
+    const supremeAptitude = this._hasCharacterFlag("supremeAptitude", abilityId);
 
     // Roll and return
     const flavor = game.i18n.format("SW5E.AbilityPromptTitle", { ability: label });
@@ -2068,6 +2081,7 @@ export default class Actor5e extends Actor {
    */
   async rollAbilitySave(abilityId, options = {}) {
     const flags = this.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
     const label = CONFIG.SW5E.abilities[abilityId]?.label ?? "";
     const abl = this.system.abilities[abilityId];
     const globalBonuses = this.system.bonuses?.abilities ?? {};
@@ -2107,14 +2121,21 @@ export default class Actor5e extends Actor {
     }
 
     // Flags
-    const checkFlagsWithAbilities = (keys) => keys.reduce(
-      ((acc, key) => (flags[key] && CONFIG.SW5E.characterFlags[key].abilities.includes(abilityId)) ? key : acc),
-      false
-    );
-    const supremeDurability = checkFlagsWithAbilities(['supremeDurability']);
-    const forceAdvantage = options.isForcePower && checkFlagsWithAbilities(['closedMind', 'forceContention', 'nimbleReflexes']);
-    const techAdvantage = options.isTechPower && checkFlagsWithAbilities(['adaptiveResilience', 'techResistance']);
-    const advantage = forceAdvantage || techAdvantage;
+    const supremeDurability = this._hasCharacterFlag("supremeDurability", abilityId);
+    const forceAdvantage = options.isForcePower && this._hasCharacterFlag(["closedMind", "forceContention", "nimbleReflexes"], abilityId);
+    const techAdvantage = options.isTechPower && this._hasCharacterFlag(["adaptiveResilience", "techResistance"], abilityId);
+    const sonicSensitivity = options.dealsSonicDmg && this._hasCharacterFlag("sonicSensitivity");
+    // TODO: Check for inflinting poisoned condition for twoLievered
+    const twoLivered = (options.isPoison || options.dealsPoisonDmg) && this._hasCharacterFlag("twoLivered");
+
+    // TODO: Check for blinded, deafened, or incapacitated for dangerSense
+    const advantageFlag = forceAdvantage || techAdvantage || twoLivered || this._hasCharacterFlag(["dangerSense", "treeClimber"], abilityId);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = sonicSensitivity;
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
 
     // Roll and return
     const flavor = game.i18n.format("SW5E.SavePromptTitle", { ability: label });
@@ -2125,8 +2146,10 @@ export default class Actor5e extends Actor {
         flavor,
         elvenAccuracy: supremeDurability,
         halflingLucky: flags.halflingLucky,
-        advantage,
-        advantageHint: CONFIG.SW5E.characterFlags[advantage]?.name ?? '',
+        advantage: advantageFlag && !disadvantageFlag,
+        advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         messageData: {
           speaker: options.speaker || ChatMessage.getSpeaker({ actor: this }),
           "flags.sw5e.roll": { type: "save", abilityId }

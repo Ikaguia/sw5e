@@ -3794,6 +3794,14 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
+  heatAdaptation: {
+    name: "SW5E.FlagsHeatAdaptation",
+    hint: "SW5E.FlagsHeatAdaptationHint",
+    condition: "SW5E.FlagsHeatAdaptationCondition",
+    abilities: ["con"],
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
   inscrutable: {
     name: "SW5E.FlagsInscrutable",
     hint: "SW5E.FlagsInscrutableHint",
@@ -3803,6 +3811,8 @@ SW5E.characterFlags = {
   keenSenses: {
     name: "SW5E.FlagsKeenSenses",
     hint: "SW5E.FlagsKeenSensesHint",
+    condition: "SW5E.FlagsKeenSensesCondition",
+    skills: ["prc"],
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
@@ -3921,6 +3931,12 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
+  sonicSensitivity: {
+    name: "SW5E.FlagsSonicSensitivity",
+    hint: "SW5E.FlagsSonicSensitivityHint",
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
   strongLegged: {
     name: "SW5E.FlagsStrongLegged",
     hint: "SW5E.FlagsStrongLeggedHint",
@@ -3970,6 +3986,22 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
+  treeClimber: {
+    name: "SW5E.FlagsTreeClimber",
+    hint: "SW5E.FlagsTreeClimberHint",
+    condition: "SW5E.FlagsTreeClimberCondition",
+    abilities: ["str"],
+    skills: ["ath"],
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
+  twoLivered: {
+    name: "SW5E.FlagsTwoLivered",
+    hint: "SW5E.FlagsTwoLiveredHint",
+    condition: "SW5E.FlagsTwoLiveredCondition",
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
   unarmedCombatant: {
     name: "SW5E.FlagsUnarmedCombatant",
     hint: "SW5E.FlagsUnarmedCombatantHint",
@@ -3986,6 +4018,13 @@ SW5E.characterFlags = {
     name: "SW5E.FlagsUnsettlingVisage",
     hint: "SW5E.FlagsUnsettlingVisageHint",
     section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
+  dangerSense: {
+    name: "SW5E.FlagsDangerSense",
+    hint: "SW5E.FlagsDangerSenseHint",
+    abilities: ["dex"],
+    section: "SW5E.Features",
     type: Boolean
   },
   initiativeAdv: {
@@ -4010,6 +4049,14 @@ SW5E.characterFlags = {
     name: "SW5E.FlagsObservant",
     hint: "SW5E.FlagsObservantHint",
     skills: ["prc", "inv"],
+    section: "SW5E.Features",
+    type: Boolean
+  },
+  pathfinder: {
+    name: "SW5E.FlagsPathfinder",
+    hint: "SW5E.FlagsPathfinderHint",
+    condition: "SW5E.FlagsPathfinderCondition",
+    skills: ["sur"],
     section: "SW5E.Features",
     type: Boolean
   },
@@ -4098,7 +4145,7 @@ SW5E.characterFlags = {
     placeholder: 1
   }
 };
-preLocalize("characterFlags", { keys: ["name", "hint", "section"] });
+preLocalize("characterFlags", { keys: ["name", "hint", "condition", "section"] });
 
 /**
  * Flags allowed on actors. Any flags not in the list may be deleted during a migration.

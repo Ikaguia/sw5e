@@ -2191,8 +2191,6 @@ export default class Item5e extends Item {
       return ui.notifications.error(err);
     }
     const powerLevel = parseInt(card.dataset.powerLevel) || null;
-    const isForcePower = Object.keys(CONFIG.SW5E.powerSchoolsForce).includes(item.system.school);
-    const isTechPower = Object.keys(CONFIG.SW5E.powerSchoolsTech).includes(item.system.school);
 
     // Handle different actions
     let targets;
@@ -2217,9 +2215,16 @@ export default class Item5e extends Item {
         break;
       case "save":
         targets = this._getChatCardTargets(card);
+        const saveOptions = {
+          isForcePower: Object.keys(CONFIG.SW5E.powerSchoolsForce).includes(item.system.school),
+          isTechPower: Object.keys(CONFIG.SW5E.powerSchoolsTech).includes(item.system.school),
+          isPoison: item.system.consumableType === "poison",
+          dealsPoisonDmg: (item?.system?.damage?.parts ?? []).reduce(((acc, part) => acc || part[1] === "poison"), false),
+          dealsSonicDmg: (item?.system?.damage?.parts ?? []).reduce(((acc, part) => acc || part[1] === "sonic"), false),
+        };
         for (let token of targets) {
           const speaker = ChatMessage.getSpeaker({ scene: canvas.scene, token: token.document });
-          await token.actor.rollAbilitySave(button.dataset.ability, { event, speaker, isForcePower, isTechPower });
+          await token.actor.rollAbilitySave(button.dataset.ability, foundry.utils.mergeObject({ event, speaker }, saveOptions));
         }
         break;
       case "toolCheck":
