@@ -1680,6 +1680,7 @@ export default class Item5e extends Item {
    */
   async rollAttack(options = {}) {
     const flags = this.actor.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
     if (!this.hasAttack) throw new Error("You may not place an Attack Roll with this Item.");
     let title = `${this.name} - ${game.i18n.localize("SW5E.AttackRoll")}`;
 
@@ -1743,9 +1744,25 @@ export default class Item5e extends Item {
       }
     }
     // Flags
-    const elvenAccuracy =
-      (flags.elvenAccuracy && CONFIG.SW5E.characterFlags.elvenAccuracy.abilities.includes(this.abilityMod))
-      || undefined;
+    const elvenAccuracy = this._hasCharacterFlag("elvenAccuracy", this.abilityMod);
+
+    const advantageFlag = this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.attack.all",
+      `advantage.attack.${this.abilityMod}`,
+      `advantage.attack.${this.system.actionType}`
+    ]);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.ability.save.all",
+      `disadvantage.attack.${this.abilityMod}`,
+      `disadvantage.attack.${this.system.actionType}`
+    ]);
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
 
     // Compose roll options
     const rollConfig = foundry.utils.mergeObject(
@@ -1757,6 +1774,10 @@ export default class Item5e extends Item {
         flavor: title,
         elvenAccuracy,
         halflingLucky: flags.halflingLucky,
+        advantage: advantageFlag && !disadvantageFlag,
+        advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         dialogOptions: {
           width: 400,
           top: options.event ? options.event.clientY - 80 : null,

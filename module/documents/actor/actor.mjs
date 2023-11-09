@@ -1715,7 +1715,7 @@ export default class Actor5e extends Actor {
     if (typeof flags === "string") flags = [flags];
     return flags.reduce(
       ((acc, flag) => (
-        flagsChar[flag] &&
+        foundry.utils.getProperty(flagsChar, flag) &&
         (!ability || (flagsCfg[flag].abilities?.includes(ability) ?? true)) &&
         (!skill || (flagsCfg[flag].skills?.includes(skill) ?? true))
       ) ? flag : acc),
@@ -1806,9 +1806,21 @@ export default class Actor5e extends Actor {
     // Reliable Talent applies to any skill check we have full or better proficiency in
     const reliableTalent = skl.value >= 1 && flags.reliableTalent;
 
-    const advantageFlag = this._hasCharacterFlag(["pathfinder", "keenSenses", "treeClimber"], skl.ability, skillId);
+    const advantageFlag = this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.skill.all",
+      `advantage.skill.${skillId}`
+    ]);
     let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
     if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.skill.all",
+      `disadvantage.skill.${skillId}`
+    ]);
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
 
     // Roll and return
     const flavor = game.i18n.format("SW5E.SkillPromptTitle", { skill: CONFIG.SW5E.skills[skillId]?.label ?? "" });
@@ -1821,8 +1833,10 @@ export default class Actor5e extends Actor {
         elvenAccuracy: supremeAptitude,
         halflingLucky: flags.halflingLucky,
         reliableTalent,
-        advantage: advantageFlag,
+        advantage: advantageFlag && !disadvantageFlag,
         advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         messageData: {
           speaker: options.speaker || ChatMessage.getSpeaker({ actor: this }),
           "flags.sw5e.roll": { type: "skill", skillId }
@@ -1914,6 +1928,23 @@ export default class Actor5e extends Actor {
       data.toolBonus = bonus.join(" + ");
     }
 
+    // Flags
+    const advantageFlag = this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.tool.all",
+      `advantage.tool.${tool.system.toolType}`
+    ]);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.tool.all",
+      `disadvantage.tool.${tool.system.toolType}`
+    ]);
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
+
     const flavor = game.i18n.format("SW5E.ToolPromptTitle", { tool: Trait.keyLabel("tool", toolId) ?? "" });
     const rollData = foundry.utils.mergeObject(
       {
@@ -1922,6 +1953,10 @@ export default class Actor5e extends Actor {
         title: `${flavor}: ${this.name}`,
         chooseModifier: true,
         halflingLucky: this.getFlag("sw5e", "halflingLucky"),
+        advantage: advantageFlag && !disadvantageFlag,
+        advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         messageData: {
           speaker: options.speaker || ChatMessage.implementation.getSpeaker({ actor: this }),
           "flags.sw5e.roll": { type: "tool", toolId }
@@ -1994,6 +2029,7 @@ export default class Actor5e extends Actor {
    */
   async rollAbilityTest(abilityId, options = {}) {
     const flags = this.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
     const label = CONFIG.SW5E.abilities[abilityId]?.label ?? "";
     const abl = this.system.abilities[abilityId];
     const globalBonuses = this.system.bonuses?.abilities ?? {};
@@ -2026,6 +2062,24 @@ export default class Actor5e extends Actor {
     // Flags
     const supremeAptitude = this._hasCharacterFlag("supremeAptitude", abilityId);
 
+    const advantageFlag = this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.ability.all",
+      "advantage.ability.check.all",
+      `advantage.ability.check.${abilityId}`
+    ]);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.ability.all",
+      "disadvantage.ability.check.all",
+      `disadvantage.ability.check.${abilityId}`
+    ]);
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
+
     // Roll and return
     const flavor = game.i18n.format("SW5E.AbilityPromptTitle", { ability: label });
     const rollData = foundry.utils.mergeObject(
@@ -2035,6 +2089,10 @@ export default class Actor5e extends Actor {
         flavor,
         elvenAccuracy: supremeAptitude,
         halflingLucky: flags.halflingLucky,
+        advantage: advantageFlag && !disadvantageFlag,
+        advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         messageData: {
           speaker: options.speaker || ChatMessage.getSpeaker({ actor: this }),
           "flags.sw5e.roll": { type: "ability", abilityId }
@@ -2122,18 +2180,43 @@ export default class Actor5e extends Actor {
 
     // Flags
     const supremeDurability = this._hasCharacterFlag("supremeDurability", abilityId);
-    const forceAdvantage = options.isForcePower && this._hasCharacterFlag(["closedMind", "forceContention", "nimbleReflexes"], abilityId);
-    const techAdvantage = options.isTechPower && this._hasCharacterFlag(["adaptiveResilience", "techResistance"], abilityId);
-    const sonicSensitivity = options.dealsSonicDmg && this._hasCharacterFlag("sonicSensitivity");
-    // TODO: Check for inflinting poisoned condition for twoLievered
+    // TODO: Check for inflinting poisoned condition for twoLivered
     const twoLivered = (options.isPoison || options.dealsPoisonDmg) && this._hasCharacterFlag("twoLivered");
-
     // TODO: Check for blinded, deafened, or incapacitated for dangerSense
-    const advantageFlag = forceAdvantage || techAdvantage || twoLivered || this._hasCharacterFlag(["dangerSense", "treeClimber"], abilityId);
+    const dangerSense = this._hasCharacterFlag(["dangerSense", "treeClimber"], abilityId);
+    const sonicSensitivity = options.dealsSonicDmg && this._hasCharacterFlag("sonicSensitivity");
+
+    const forceAdvantageFlag = options.isForcePower && this._hasCharacterFlag([
+      "advantage.ability.save.force.all",
+      `advantage.ability.save.force.${abilityId}`
+    ]);
+    const techAdvantageFlag = options.isTechPower && this._hasCharacterFlag([
+      "advantage.ability.save.tech.all",
+      `advantage.ability.save.tech.${abilityId}`
+    ]);
+    const advantageFlag = twoLivered || dangerSense || forceAdvantageFlag || techAdvantageFlag || this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.ability.all",
+      "advantage.ability.save.all",
+      `advantage.ability.save.${abilityId}`
+    ]);
     let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
     if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
 
-    const disadvantageFlag = sonicSensitivity;
+    const forceDisadvantageFlag = options.isForcePower && this._hasCharacterFlag([
+      "disadvantage.ability.save.force.all",
+      `disadvantage.ability.save.force.${abilityId}`
+    ]);
+    const techDisadvantageFlag = options.isTechPower && this._hasCharacterFlag([
+      "disadvantage.ability.save.tech.all",
+      `disadvantage.ability.save.tech.${abilityId}`
+    ]);
+    const disadvantageFlag = sonicSensitivity || forceDisadvantageFlag || techDisadvantageFlag || this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.ability.all",
+      "disadvantage.ability.save.all",
+      `disadvantage.ability.save.${abilityId}`
+    ]);
     let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
     if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
 
@@ -2193,6 +2276,8 @@ export default class Actor5e extends Actor {
    * @returns {Promise<D20Roll|null>} A Promise which resolves to the Roll instance
    */
   async rollDeathSave(options = {}) {
+    const flags = this.flags.sw5e ?? {};
+    const flagsCfg = CONFIG.SW5E.characterFlags;
     const death = this.system.attributes.death;
 
     // Display a warning if we are not at zero HP or if we already have reached 3
@@ -2213,6 +2298,22 @@ export default class Actor5e extends Actor {
       data.prof = new Proficiency(this.system.attributes.prof, 1).term;
     }
 
+    const advantageFlag = this._hasCharacterFlag([
+      "advantage.all",
+      "advantage.ability.save.all",
+      "advantage.deathSave"
+    ]);
+    let advantageHint = flagsCfg[advantageFlag]?.name ?? '';
+    if (flagsCfg[advantageFlag]?.condition) advantageHint += ` (${flagsCfg[advantageFlag].condition})`;
+
+    const disadvantageFlag = this._hasCharacterFlag([
+      "disadvantage.all",
+      "disadvantage.ability.save.all",
+      "disadvantage.deathSave"
+    ]);
+    let disadvantageHint = flagsCfg[disadvantageFlag]?.name ?? '';
+    if (flagsCfg[disadvantageFlag]?.condition) disadvantageHint += ` (${flagsCfg[disadvantageFlag].condition})`;
+
     // Include a global actor ability save bonus
     if (globalBonuses.save) {
       parts.push("@saveBonus");
@@ -2228,6 +2329,10 @@ export default class Actor5e extends Actor {
         flavor,
         halflingLucky: this.getFlag("sw5e", "halflingLucky"),
         targetValue: 10,
+        advantage: advantageFlag && !disadvantageFlag,
+        advantageHint,
+        disadvantage: disadvantageFlag && !advantageFlag,
+        disadvantageHint,
         messageData: {
           speaker: speaker,
           "flags.sw5e.roll": { type: "death" }
