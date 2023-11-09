@@ -2067,14 +2067,36 @@ preLocalize("powerTags", { keys: ["label", "abbr"] });
 /* -------------------------------------------- */
 
 /**
+ * Schools to which a force power can belong.
+ * @enum {string}
+ */
+SW5E.powerSchoolsForce = {
+  lgt: "SW5E.SchoolLgt",
+  uni: "SW5E.SchoolUni",
+  drk: "SW5E.SchoolDrk",
+};
+preLocalize("powerSchoolsForce");
+
+/* -------------------------------------------- */
+
+/**
+ * Schools to which a tech power can belong.
+ * @enum {string}
+ */
+SW5E.powerSchoolsTech = {
+  tec: "SW5E.SchoolTec",
+};
+preLocalize("powerSchoolsTech");
+
+/* -------------------------------------------- */
+
+/**
  * Schools to which a power can belong.
  * @enum {string}
  */
 SW5E.powerSchools = {
-  lgt: "SW5E.SchoolLgt",
-  uni: "SW5E.SchoolUni",
-  drk: "SW5E.SchoolDrk",
-  tec: "SW5E.SchoolTec",
+  ...SW5E.powerSchoolsForce,
+  ...SW5E.powerSchoolsTech,
   enh: "SW5E.SchoolEnh"
 };
 preLocalize("powerSchools");
@@ -2254,6 +2276,40 @@ SW5E.weaponSizes = {
   grg: "SW5E.SizeGargantuan"
 };
 preLocalize("weaponSizes");
+
+/**
+ * The set of melee weapon classifications.
+ * @enum {string}
+ */
+SW5E.meleeWeaponClasses = {
+  blade: "SW5E.WeaponClassBlade",
+  crushing: "SW5E.WeaponClassCrushing",
+  polearm: "SW5E.WeaponClassPolearm",
+  trip: "SW5E.WeaponClassTrip"
+};
+preLocalize("meleeWeaponClasses");
+
+/**
+ * The set of ranged weapon classifications.
+ * @enum {string}
+ */
+SW5E.rangedWeaponClasses = {
+  carbine: "SW5E.WeaponClassCarbine",
+  heavy: "SW5E.WeaponClassHeavy",
+  rifle: "SW5E.WeaponClassRifle",
+  sidearm: "SW5E.WeaponClassSidearm"
+};
+preLocalize("rangedWeaponClasses");
+
+/**
+ * The set of weapon classifications.
+ * @enum {string}
+ */
+SW5E.weaponClasses = {
+  ...SW5E.meleeWeaponClasses,
+  ...SW5E.rangedWeaponClasses
+};
+preLocalize("weaponClasses");
 
 /* -------------------------------------------- */
 
@@ -3628,17 +3684,243 @@ preLocalize("traits", { key: "label" });
 
 /* -------------------------------------------- */
 
+SW5E.midiFlags = {
+  // Attacks
+  "advantage.all": {
+    name: "SW5E.CharacterFlags.Advantage.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  "advantage.attack.all": {
+    name: "SW5E.CharacterFlags.Advantage.Attack.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Attack.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+    `advantage.attack.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Attack.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Attack.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+  ...Object.fromEntries(Object.keys(SW5E.abilities).map(((key) => [
+    `advantage.attack.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Attack.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Attack.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+  // "grants.advantage.attack.all": {
+  //   name: "SW5E.CharacterFlags.Grants.Advantage.Attack.All.Name",
+  //   hint: "SW5E.CharacterFlags.Grants.Advantage.Attack.All.Hint",
+  //   section: "SW5E.SpecialFeatures",
+  //   type: Boolean
+  // },
+  // ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+  //   `grants.advantage.attack.${key}`,
+  //   {
+  //     name: `SW5E.CharacterFlags.Grants.Advantage.Attack.${key}.Name`,
+  //     hint: `SW5E.CharacterFlags.Grants.Advantage.Attack.${key}.Hint`,
+  //     section: "SW5E.SpecialFeatures",
+  //     type: Boolean
+  //   }
+  // ]))),
+
+  // Critical
+  // "critical.all": {
+  //   name: "SW5E.CharacterFlags.Critical.All.Name",
+  //   hint: "SW5E.CharacterFlags.Critical.All.Hint",
+  //   section: "SW5E.SpecialFeatures",
+  //   type: Boolean
+  // },
+  // ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+  //   `critical.${key}`,
+  //   {
+  //     name: `SW5E.CharacterFlags.Critical.Attack.${key}.Name`,
+  //     hint: `SW5E.CharacterFlags.Critical.Attack.${key}.Hint`,
+  //     section: "SW5E.SpecialFeatures",
+  //     type: Boolean
+  //   }
+  // ]))),
+  // "noCritical.all": {
+  //   name: "SW5E.CharacterFlags.NoCritical.All.Name",
+  //   hint: "SW5E.CharacterFlags.NoCritical.All.Hint",
+  //   section: "SW5E.SpecialFeatures",
+  //   type: Boolean
+  // },
+  // ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+  //   `noCritical.${key}`,
+  //   {
+  //     name: `SW5E.CharacterFlags.NoCritical.Attack.${key}.Name`,
+  //     hint: `SW5E.CharacterFlags.NoCritical.Attack.${key}.Hint`,
+  //     section: "SW5E.SpecialFeatures",
+  //     type: Boolean
+  //   }
+  // ]))),
+  // "grants.critical.all": {
+  //   name: "SW5E.CharacterFlags.Grants.Critical.All.Name",
+  //   hint: "SW5E.CharacterFlags.Grants.Critical.All.Hint",
+  //   section: "SW5E.SpecialFeatures",
+  //   type: Boolean
+  // },
+  // ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+  //   `grants.critical.${key}`,
+  //   {
+  //     name: `SW5E.CharacterFlags.Grants.Critical.Attack.${key}.Name`,
+  //     hint: `SW5E.CharacterFlags.Grants.Critical.Attack.${key}.Hint`,
+  //     section: "SW5E.SpecialFeatures",
+  //     type: Boolean
+  //   }
+  // ]))),
+  // "fail.critical.all": {
+  //   name: "SW5E.CharacterFlags.Fail.Critical.All.Name",
+  //   hint: "SW5E.CharacterFlags.Fail.Critical.All.Hint",
+  //   section: "SW5E.SpecialFeatures",
+  //   type: Boolean
+  // },
+  // ...Object.fromEntries(Object.keys(SW5E.itemActionTypesAttack).map(((key) => [
+  //   `fail.critical.${key}`,
+  //   {
+  //     name: `SW5E.CharacterFlags.Fail.Critical.Attack.${key}.Name`,
+  //     hint: `SW5E.CharacterFlags.Fail.Critical.Attack.${key}.Hint`,
+  //     section: "SW5E.SpecialFeatures",
+  //     type: Boolean
+  //   }
+  // ]))),
+
+  // Ability checks
+  "advantage.ability.all": {
+    name: "SW5E.CharacterFlags.Advantage.Ability.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Ability.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  "advantage.ability.check.all": {
+    name: "SW5E.CharacterFlags.Advantage.Ability.Check.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Ability.Check.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.abilities).map(((key) => [
+    `advantage.ability.check.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Ability.Check.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Ability.Check.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+
+  // Skill Checks
+  "advantage.skill.all": {
+    name: "SW5E.CharacterFlags.Advantage.Skill.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Skill.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.skills).map(((key) => [
+    `advantage.skill.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Skill.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Skill.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+
+  // Tool Checks
+  "advantage.tool.all": {
+    name: "SW5E.CharacterFlags.Advantage.Tool.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Tool.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.toolTypes).map(((key) => [
+    `advantage.tool.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Tool.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Tool.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+
+  // Saving Throws
+  "advantage.ability.save.all": {
+    name: "SW5E.CharacterFlags.Advantage.Ability.Save.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Ability.Save.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.abilities).map(((key) => [
+    `advantage.ability.save.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Ability.Save.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Ability.Save.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+  "advantage.ability.save.tech.all": {
+    name: "SW5E.CharacterFlags.Advantage.Ability.Save.Tech.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Ability.Save.Tech.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.abilities).map(((key) => [
+    `advantage.ability.save.tech.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Ability.Save.Tech.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Ability.Save.Tech.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+  "advantage.ability.save.force.all": {
+    name: "SW5E.CharacterFlags.Advantage.Ability.Save.Force.All.Name",
+    hint: "SW5E.CharacterFlags.Advantage.Ability.Save.Force.All.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  },
+  ...Object.fromEntries(Object.keys(SW5E.abilities).map(((key) => [
+    `advantage.ability.save.force.${key}`,
+    {
+      name: `SW5E.CharacterFlags.Advantage.Ability.Save.Force.${key}.Name`,
+      hint: `SW5E.CharacterFlags.Advantage.Ability.Save.Force.${key}.Hint`,
+      section: "SW5E.SpecialFeatures",
+      type: Boolean
+    }
+  ]))),
+  "advantage.deathSave": {
+    name: "SW5E.CharacterFlags.Advantage.DeathSave.Name",
+    hint: "SW5E.CharacterFlags.Advantage.DeathSave.Hint",
+    section: "SW5E.SpecialFeatures",
+    type: Boolean
+  }
+};
+for (const [id, flag] of Object.entries(SW5E.midiFlags)) {
+  if (!id.startsWith("advantage")) continue;
+  SW5E.midiFlags[id.replace("advantage", "disadvantage")] = {
+    name: flag.name.replace("Advantage", "Disadvantage"),
+    hint: flag.hint.replace("Advantage", "Disadvantage"),
+    section: flag.section,
+    type: flag.type
+  };
+}
+preLocalize("midiFlags", { keys: ["name", "hint", "condition", "section"] });
+
 /**
  * Special character flags.
  * * @enum {CharacterFlagConfig}
  */
 SW5E.characterFlags = {
-  adaptiveResilience: {
-    name: "SW5E.FlagsAdaptiveResilience",
-    hint: "SW5E.FlagsAdaptiveResilienceHint",
-    section: "SW5E.SpeciesTraits",
-    type: Boolean
-  },
+  ...SW5E.midiFlags,
   aggressive: {
     name: "SW5E.FlagsAggressive",
     hint: "SW5E.FlagsAggressiveHint",
@@ -3666,12 +3948,6 @@ SW5E.characterFlags = {
   cannibalize: {
     name: "SW5E.FlagsCannibalize",
     hint: "SW5E.FlagsCannibalizeHint",
-    section: "SW5E.SpeciesTraits",
-    type: Boolean
-  },
-  closedMind: {
-    name: "SW5E.FlagsClosedMind",
-    hint: "SW5E.FlagsClosedMindHint",
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
@@ -3705,12 +3981,6 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
-  forceContention: {
-    name: "SW5E.FlagsForceContention",
-    hint: "SW5E.FlagsForceContentionHint",
-    section: "SW5E.SpeciesTraits",
-    type: Boolean
-  },
   forceInsensitive: {
     name: "SW5E.FlagsForceInsensitive",
     hint: "SW5E.FlagsForceInsensitiveHint",
@@ -3735,6 +4005,14 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
+  heatAdaptation: {
+    name: "SW5E.FlagsHeatAdaptation",
+    hint: "SW5E.FlagsHeatAdaptationHint",
+    condition: "SW5E.FlagsHeatAdaptationCondition",
+    abilities: ["con"],
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
   inscrutable: {
     name: "SW5E.FlagsInscrutable",
     hint: "SW5E.FlagsInscrutableHint",
@@ -3744,6 +4022,8 @@ SW5E.characterFlags = {
   keenSenses: {
     name: "SW5E.FlagsKeenSenses",
     hint: "SW5E.FlagsKeenSensesHint",
+    condition: "SW5E.FlagsKeenSensesCondition",
+    skills: ["prc"],
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
@@ -3855,6 +4135,12 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
+  sonicSensitivity: {
+    name: "SW5E.FlagsSonicSensitivity",
+    hint: "SW5E.FlagsSonicSensitivityHint",
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
   strongLegged: {
     name: "SW5E.FlagsStrongLegged",
     hint: "SW5E.FlagsStrongLeggedHint",
@@ -3879,12 +4165,6 @@ SW5E.characterFlags = {
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
-  techResistance: {
-    name: "SW5E.FlagsTechResistance",
-    hint: "SW5E.FlagsTechResistanceHint",
-    section: "SW5E.SpeciesTraits",
-    type: Boolean
-  },
   tinker: {
     name: "SW5E.FlagsTinker",
     hint: "SW5E.FlagsTinkerHint",
@@ -3900,6 +4180,13 @@ SW5E.characterFlags = {
   trance: {
     name: "SW5E.FlagsTrance",
     hint: "SW5E.FlagsTranceHint",
+    section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
+  twoLivered: {
+    name: "SW5E.FlagsTwoLivered",
+    hint: "SW5E.FlagsTwoLiveredHint",
+    condition: "SW5E.FlagsTwoLiveredCondition",
     section: "SW5E.SpeciesTraits",
     type: Boolean
   },
@@ -3919,6 +4206,13 @@ SW5E.characterFlags = {
     name: "SW5E.FlagsUnsettlingVisage",
     hint: "SW5E.FlagsUnsettlingVisageHint",
     section: "SW5E.SpeciesTraits",
+    type: Boolean
+  },
+  dangerSense: {
+    name: "SW5E.FlagsDangerSense",
+    hint: "SW5E.FlagsDangerSenseHint",
+    abilities: ["dex"],
+    section: "SW5E.Features",
     type: Boolean
   },
   initiativeAdv: {
@@ -4031,7 +4325,7 @@ SW5E.characterFlags = {
     placeholder: 1
   }
 };
-preLocalize("characterFlags", { keys: ["name", "hint", "section"] });
+preLocalize("characterFlags", { keys: ["name", "hint", "condition", "section"] });
 
 /**
  * Flags allowed on actors. Any flags not in the list may be deleted during a migration.

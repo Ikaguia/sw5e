@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Weapon classes (`carbine`, `polearm`, `sidearm`...).
+- Compendium Browser 'Classification' tab.
+- Mastery, High Mastery, and Grand Mastery proficiency will now set the default roll mode and add the additional rolls when appropriate.
+- Character Flags `Danger Sense`, `Sonic Sensitivity`, `Two Livered`.
+- When the system grants (dis)advantage on a roll, a tooltip will mention where it is coming from.
+
+### Changes
+
+- Art Updates.
+- Compendium updates.
+- All feats should now have proper active effects. (Thanks to `Florenc#5173`)
+- All species should now have their ability score improvements granted by advancements instead of active effects.
+- Character flags that grant advantage on saving throws against force/tech powers should now work.
+
+### Fixed
+
+- Rolling power die in Starship Sheet should once again work.
+- Errors about reading JSON during migration.
+- When making a roll with `Advantage` or `Disadvantage` as the default, the button should now have the proper color.
+
 ## [2.3.1.2.6.4] - 2023-10-16
 
 ### Changes
@@ -112,7 +136,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changes
 
-- The starship actions, armor, equipment, features, and weapons compendiums have been updated to match the website. (Credits to GreyCouncil#8804).
+- The starship actions, armor, equipment, features, and weapons compendiums have been updated to match the website. (Credits to `GreyCouncil#8804`).
 - Backdrop Icons were moved to `packs/Icons/ItemBackdrop`.
 - Some items that were previously loot (rations, spikes) have been made consumables.
 - Some items that were previously equipment (life support except suits, respirators and rations) have been made loot.
